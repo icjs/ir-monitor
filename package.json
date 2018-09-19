@@ -1,0 +1,20 @@
+{
+  "name": "ir-monitor",
+  "version": "1.0.0",
+  "description": "An IrChain monitor to hint user real-time reality that transactions information.",
+  "main": "monitor.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 0"
+  },
+  "keywords": [
+    "irchain",
+    "monitor"
+  ],
+  "author": "ldcc <contact@irchian.io>",
+  "license": "ISC",
+  "dependencies": {
+    "bn.js": "^4.11.8",
+    "irc-block-tracker": "^0.1.0",
+    "irc.js": "git+https://github.com/icjs/ircjs.git"
+  }
+}
