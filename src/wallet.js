@@ -9,18 +9,12 @@ function Wallet(provider) {
   const token = new IrcContract(query)(abi).at();
 
   this.hintIrcer = (tx, hint) => {
-    return (owner) => query.getBalance(owner).then(balance => hint(Object.assign(tx, {
-      ircBalance: strify(balance),
-      hintTo: owner === tx.from ? 'sender' : 'recipient',
-    })));
+    return (o) => query.getBalance(o).then(b => hint({...tx, ircer: strify(b), hintTo: o}));
   };
 
   this.hintToken = (tx, hint) => {
     token.address = tx.to;
-    return (owner) => token.balanceOf(owner).then(balance => hint(Object.assign(tx, {
-      ircBalance: strify(balance),
-      hintTo: owner === tx.from ? 'sender' : 'recipient',
-    })));
+    return (o) => token.balanceOf(o).then(b => hint({...tx, toker: strify(b), hintTo: o}));
   };
 }
 

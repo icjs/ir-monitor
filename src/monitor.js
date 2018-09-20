@@ -1,3 +1,4 @@
+const Provider = require('irc.js').HttpProvider;
 const BlockTracker = require('irc-block-tracker');
 const EventEmitter = require('events').EventEmitter;
 const BN = require('bn.js');
@@ -6,6 +7,7 @@ const queue = require('./queue');
 const {
   CONFIRM,
   NOTIFY,
+  MAINNET_URL,
 } = require('./lib/enum');
 
 class Monitor extends EventEmitter {
@@ -16,7 +18,11 @@ class Monitor extends EventEmitter {
     this.confirm = opts.confirm || console.log;
     this.notify = opts.notify || console.log;
 
-    this.provider = opts.provider;
+    this.monitorredes = {};
+    opts.monitorredes = opts.monitorredes || [];
+    opts.monitorredes.forEach(address => this.monitorredes[address] = true);
+
+    this.provider = opts.provider || new Provider(MAINNET_URL);
     this.blockTracker = new BlockTracker({
       provider: this.provider,
       pollingInterval: opts.pollingInterval || 4000,
@@ -25,7 +31,6 @@ class Monitor extends EventEmitter {
     this.blockNumber = null;
     this.wallet = new Wallet(this.provider);
     this.queue = queue;
-    this.monitorredes = opts.monitorredes || {};
     this.running = true;
   }
 
@@ -41,21 +46,28 @@ class Monitor extends EventEmitter {
   hint(type, block, txs) {
     const hint = this.pickHint(type);
     txs.forEach(tx => {
-      const hindList = [];
-      //  hint sender
-      if (this.monitorredes[tx.from]) {
-        hindList.push(tx.from);
-      }
-      //  hind recipient
-      if (this.monitorredes[tx.to]) {
-        hindList.push(tx.to);
-      }
-
       tx.block = block;
-      // const wallet = this.wallet;
-      const hinting = tx.token ? this.wallet.hintToken : this.wallet.hintIrcer;
 
-      hindList.forEach(hinting(tx, hint));
+      const hinting = tx.token ? this.wallet.hintToken : this.wallet.hintIrcer;
+      const hindList = {};
+      // hint sender
+      if (this.monitorredes[tx.from]) {
+        hindList[tx.from] = true;
+      }
+      // hint recipient
+      if (this.monitorredes[tx.to]) {
+        hindList[tx.to] = true;
+      }
+      // hint others
+      const params = tx.input.params;
+      for (let i = 0; i < params.length; i++) {
+        const param = tx.input.params[i];
+        params[i].type === 'address' &&
+        this.monitorredes[param.value] &&
+        (hindList[param.value] = true);
+      }
+
+      Object.keys(hindList).forEach(hinting(tx, hint));
     });
   }
 
@@ -83,8 +95,12 @@ class Monitor extends EventEmitter {
     }
   }
 
-  add(address) {
+  subscribe(address) {
     this.monitorredes[address] = true;
+  }
+
+  unsubscribe(address) {
+    delete this.monitorredes[address];
   }
 
   start() {

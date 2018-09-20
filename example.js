@@ -16,15 +16,15 @@ const notify = (txInfo) => {
   console.log('===========================================');
 };
 
-const monitorredes = {
-  '0xb3f1507591583ebf14b5b31d134d700c83c20fa1': true,
-};
+const monitorredes = [
+  '0xb3f1507591583ebf14b5b31d134d700c83c20fa1',
+];
 
 const monitor = new Monitor({
   provider: provider,
   confirm: confirm,
   notify: notify,
-  monitorredes: monitorredes
+  monitorredes: monitorredes,
 });
 
-monitor.add('0xd0ca89a6d9435a6a4857c1083f165af01fbfda7d');
+monitor.subscribe('0xd0ca89a6d9435a6a4857c1083f165af01fbfda7d');
